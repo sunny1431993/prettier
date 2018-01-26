@@ -167,10 +167,12 @@ const DEFAULT_SCSS_DIRECTIVE = "!default";
 function parseNestedCSS(node) {
   if (node && typeof node === "object") {
     delete node.parent;
+
     for (const key in node) {
       parseNestedCSS(node[key]);
     }
-    if (typeof node.selector === "string") {
+
+    if (typeof node.selector === "string" && node.selector.trim().length > 0) {
       const selector = node.raws.selector
         ? node.raws.selector.raw
         : node.selector;
@@ -189,11 +191,15 @@ function parseNestedCSS(node) {
           value: selector
         };
       }
+
+      return node;
     }
+
     if (
       node.type &&
       node.type !== "css-comment-yaml" &&
-      typeof node.value === "string"
+      typeof node.value === "string" &&
+      node.value.trim().length > 0
     ) {
       try {
         if (node.value.endsWith(DEFAULT_SCSS_DIRECTIVE)) {
@@ -208,26 +214,79 @@ function parseNestedCSS(node) {
           node.source
         );
       }
+
+      return node;
     }
-    if (node.type === "css-atrule" && typeof node.params === "string") {
+
+    if (
+      node.type === "css-atrule" &&
+      typeof node.params === "string" &&
+      node.params.trim().length > 0
+    ) {
+      if (
+        node.name.toLowerCase() === "counter-style" ||
+        node.name.toLowerCase().endsWith("keyframes") ||
+        node.name.toLowerCase() === "page" ||
+        node.name.toLowerCase() === "font-feature-values"
+      ) {
+        return node;
+      }
+
       if (node.name === "warn" || node.name === "error") {
         node.params = {
           type: "media-unknown",
           value: node.params
         };
-      } else {
-        if (node.params.includes("#{")) {
-          // Workaround for media at rule with scss interpolation
-          return {
-            type: "media-unknown",
-            value: node.params
-          };
+
+        return node;
+      }
+
+      if (node.name === "extend") {
+        node.selector = parseSelector(node.params);
+        delete node.params;
+
+        return node;
+      }
+
+      if (node.name === "at-root") {
+        if (/^\(\s*(without|with)\s*:[\s\S]+\)$/.test(node.params)) {
+          node.params = parseMediaQuery(node.params);
+        } else {
+          node.selector = parseSelector(node.params);
+          delete node.params;
         }
 
-        node.params = parseMediaQuery(node.params);
+        return node;
       }
+
+      if (
+        node.name === "mixin" ||
+        node.name === "include" ||
+        node.name === "function" ||
+        node.name === "return" ||
+        node.name === "for" ||
+        node.name === "while"
+      ) {
+        node.value = parseValue(node.params);
+        delete node.params;
+
+        return node;
+      }
+
+      if (node.params.includes("#{")) {
+        // Workaround for media at rule with scss interpolation
+        return {
+          type: "media-unknown",
+          value: node.params
+        };
+      }
+
+      node.params = parseMediaQuery(node.params);
+
+      return node;
     }
   }
+
   return node;
 }
 

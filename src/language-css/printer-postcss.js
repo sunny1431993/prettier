@@ -133,6 +133,8 @@ function genericPrint(path, options, print) {
               path.call(print, "params")
             ])
           : "",
+        n.selector ? indent(concat([" ", path.call(print, "selector")])) : "",
+        n.value ? indent(concat([" ", path.call(print, "value")])) : "",
         n.nodes
           ? concat([
               " {",
@@ -315,8 +317,10 @@ function genericPrint(path, options, print) {
         declParent = path.getParentNode(i++);
       } while (declParent && declParent.type !== "css-decl");
 
-      const declParentProp = declParent.prop.toLowerCase();
+      const declParentProp =
+        declParent && declParent.prop && declParent.prop.toLowerCase();
       const isGridValue =
+        declParentProp &&
         parent.type === "value-value" &&
         (declParentProp === "grid" ||
           declParentProp.startsWith("grid-template"));

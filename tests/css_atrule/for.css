@@ -1,0 +1,38 @@
+@for $i from 1 through 8 {}
+@for $i from 1 through 8{}
+@for  $i  from  1  through  8  {}
+@for  $i
+    from
+    1
+    through
+    8
+    {}
+@for
+    $i
+    from
+    1
+    through
+    8
+    {}
+@for
+$i
+from
+1
+through
+8
+{}
+@for
+
+$i
+
+from
+
+1
+
+through
+
+8
+
+{}
+@for $very-very-very-very-very-very-very-very-very-very-very-vety-very-very-very-long-var  from 1 through 8 {}
+@for $very-very-very-very-very-very-very-very-very-very-very-vety-very-very-very-long-var  from 1000000000000000000000000000000000000 through 8000000000000000000000000000000000000 {}
